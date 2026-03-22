@@ -8,164 +8,108 @@
 <meta name="apple-mobile-web-app-title" content="오목">
 <meta name="theme-color" content="#1C1A17">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon.png">
 <title>오목 — 2인용</title>
 <style>
-:root {
-  --wood-dark: #A07020;
-  --accent: #3B6D11;
-  --r: 12px;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body {
-  width: 100%; height: 100%;
-  background: #1C1A17;
-  overflow: hidden;
-  font-family: -apple-system, 'Helvetica Neue', sans-serif;
-}
-#app {
-  display: grid;
-  grid-template-rows: auto auto 1fr auto;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-  padding: env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px) 0;
-}
-#header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px 8px;
-}
-.logo { font-size: 20px; font-weight: 700; color: #E8B84B; letter-spacing: -0.5px; }
-.logo span { color: rgba(255,255,255,.35); font-weight: 400; font-size: 12px; margin-left: 6px; }
-#new-btn {
-  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
-  color: rgba(255,255,255,.8); font-size: 13px; padding: 7px 16px;
-  border-radius: 20px; cursor: pointer;
-}
-#new-btn:active { background: rgba(255,255,255,.18); }
-#players { display: flex; gap: 8px; padding: 0 12px 8px; }
-.pcard {
-  flex: 1; display: flex; align-items: center; gap: 8px;
-  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
-  border-radius: var(--r); padding: 8px 12px;
-  cursor: pointer; position: relative; overflow: hidden;
-  transition: background .2s, border-color .2s; min-height: 52px;
-}
-.pcard.active { background: rgba(59,109,17,.2); border-color: rgba(59,109,17,.6); }
-.pcard.active::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0;
-  height: 2px; background: linear-gradient(90deg,#3B6D11,#7FC23A);
-}
-.pcard:nth-child(2) { flex-direction: row-reverse; }
-.pcard:nth-child(2) .ptext { text-align: right; }
-.av {
-  width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center; font-size: 18px;
-  border: 2px solid rgba(255,255,255,.15); position: relative;
-}
-.pcard.active .av { border-color: rgba(59,109,17,.8); }
-.av.p1bg { background: #111; } .av.p2bg { background: #eee; }
-.av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-.av-ov {
-  position: absolute; inset: 0; background: rgba(0,0,0,.5);
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0; border-radius: 50%; font-size: 13px;
-}
-.pcard:active .av-ov { opacity: 1; }
-.ptext { flex: 1; min-width: 0; }
-.pname { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pst { font-size: 11px; color: rgba(255,255,255,.35); margin-top: 1px; }
-.pcard.active .pst { color: #7FC23A; font-weight: 500; }
-.dot { width: 7px; height: 7px; border-radius: 50%; background: #7FC23A; display: none; flex-shrink: 0; animation: pulse 1.2s ease-in-out infinite; }
-.pcard.active .dot { display: block; }
-@keyframes pulse { 0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.5} }
-#board-wrap {
-  display: flex; align-items: center; justify-content: center;
-  padding: 0 12px; overflow: hidden; min-height: 0; position: relative;
-}
-#board-canvas {
-  display: block; border-radius: 10px;
-  box-shadow: 0 0 0 3px var(--wood-dark), 0 8px 40px rgba(0,0,0,.6);
-  touch-action: none; cursor: pointer;
-}
-#win-overlay {
-  display: none; position: absolute;
-  background: rgba(0,0,0,.72);
-  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-  flex-direction: column; align-items: center; justify-content: center; gap: 12px;
-  border-radius: 10px; z-index: 10;
-}
-#win-overlay.show { display: flex; }
-.win-av {
-  width: 72px; height: 72px; border-radius: 50%;
-  border: 3px solid #7FC23A; overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 40px; background: #1a1a1a;
-  box-shadow: 0 0 24px rgba(127,194,58,.4);
-}
-.win-av img { width: 100%; height: 100%; object-fit: cover; }
-#win-title { font-size: 26px; font-weight: 700; color: #fff; }
-#win-sub { font-size: 13px; color: rgba(255,255,255,.5); }
-#again-btn {
-  margin-top: 4px; padding: 12px 36px; background: #3B6D11;
-  border: none; color: #fff; font-size: 15px; font-weight: 600;
-  border-radius: 24px; cursor: pointer;
-}
-#again-btn:active { opacity: .8; }
-#toolbar {
-  display: flex; align-items: center; justify-content: center;
-  padding: 8px 16px 10px;
-}
-.tbtn {
-  display: flex; align-items: center; gap: 6px;
-  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
-  color: rgba(255,255,255,.6); font-size: 12px; padding: 8px 18px;
-  border-radius: 20px; cursor: pointer;
-}
-.tbtn.on { background: rgba(59,109,17,.25); border-color: rgba(59,109,17,.5); color: #7FC23A; }
-.tbtn:active { opacity: .7; }
-#modal {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,.7);
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-  z-index: 100; align-items: flex-end; justify-content: center;
-}
-#modal.show { display: flex; }
-.sheet {
-  width: 100%; max-width: 480px; background: #2A2720;
-  border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + env(safe-area-inset-bottom,0px));
-  border-top: 1px solid rgba(255,255,255,.12);
-}
-.handle { width: 36px; height: 4px; background: rgba(255,255,255,.2); border-radius: 2px; margin: 0 auto 16px; }
-.sh-title { font-size: 16px; font-weight: 600; color: rgba(255,255,255,.85); text-align: center; margin-bottom: 14px; }
-.av-row { display: flex; justify-content: center; margin-bottom: 8px; }
-.m-av {
-  width: 76px; height: 76px; border-radius: 50%;
-  border: 2px dashed rgba(255,255,255,.25);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 42px; cursor: pointer; overflow: hidden;
-}
-.m-av:active { border-color: rgba(255,255,255,.5); }
-.m-av img { width: 100%; height: 100%; object-fit: cover; }
-.av-hint { font-size: 11px; color: rgba(255,255,255,.3); text-align: center; margin-bottom: 12px; }
-.sheet input[type=text] {
-  width: 100%; background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.15); border-radius: 10px;
-  padding: 12px 14px; font-size: 15px; color: #fff; margin-bottom: 12px; outline: none;
-}
-.sheet input[type=text]:focus { border-color: rgba(59,109,17,.7); }
-.acts { display: flex; gap: 10px; }
-.cancel {
-  flex: 1; padding: 13px; background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.6);
-  border-radius: 12px; font-size: 14px; cursor: pointer;
-}
-.confirm {
-  flex: 2; padding: 13px; background: #3B6D11; border: none;
-  color: #fff; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer;
-}
-.confirm:active { opacity: .8; }
-input[type=file] { display: none; }
+:root { --wood-dark:#A07020; --accent:#3B6D11; --r:12px; }
+*{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html,body{ width:100%; height:100%; background:#1C1A17; overflow:hidden; font-family:-apple-system,'Helvetica Neue',sans-serif; }
+#app{ display:grid; grid-template-rows:auto auto 1fr auto; width:100vw; height:100vh; height:100dvh; padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px) 0; }
+
+/* HEADER */
+#header{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px 8px; }
+.logo{ font-size:20px; font-weight:700; color:#E8B84B; letter-spacing:-0.5px; }
+.logo span{ color:rgba(255,255,255,.35); font-weight:400; font-size:12px; margin-left:6px; }
+#new-btn{ background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); color:rgba(255,255,255,.8); font-size:13px; padding:7px 16px; border-radius:20px; cursor:pointer; }
+#new-btn:active{ background:rgba(255,255,255,.18); }
+
+/* PLAYERS */
+#players{ display:flex; gap:8px; padding:0 12px 8px; }
+.pcard{ flex:1; display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:var(--r); padding:8px 12px; cursor:pointer; position:relative; overflow:hidden; transition:background .2s,border-color .2s; min-height:52px; }
+.pcard.active{ background:rgba(59,109,17,.2); border-color:rgba(59,109,17,.6); }
+.pcard.active::before{ content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,#3B6D11,#7FC23A); }
+.pcard:nth-child(2){ flex-direction:row-reverse; }
+.pcard:nth-child(2) .ptext{ text-align:right; }
+.av{ width:36px; height:36px; border-radius:50%; overflow:hidden; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:18px; border:2px solid rgba(255,255,255,.15); position:relative; }
+.pcard.active .av{ border-color:rgba(59,109,17,.8); }
+.av.p1bg{ background:#111; } .av.p2bg{ background:#eee; }
+.av img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
+.av-ov{ position:absolute; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; opacity:0; border-radius:50%; font-size:13px; }
+.pcard:active .av-ov{ opacity:1; }
+.ptext{ flex:1; min-width:0; }
+.pname{ font-size:13px; font-weight:600; color:rgba(255,255,255,.85); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pst{ font-size:11px; color:rgba(255,255,255,.35); margin-top:1px; }
+.pcard.active .pst{ color:#7FC23A; font-weight:500; }
+.dot{ width:7px; height:7px; border-radius:50%; background:#7FC23A; display:none; flex-shrink:0; animation:pulse 1.2s ease-in-out infinite; }
+.pcard.active .dot{ display:block; }
+@keyframes pulse{ 0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.5} }
+
+/* BOARD */
+#board-wrap{ display:flex; align-items:center; justify-content:center; padding:0 12px; overflow:hidden; min-height:0; position:relative; }
+#board-canvas{ display:block; border-radius:10px; box-shadow:0 0 0 3px var(--wood-dark),0 8px 40px rgba(0,0,0,.6); touch-action:none; cursor:pointer; }
+#win-overlay{ display:none; position:absolute; background:rgba(0,0,0,.72); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); flex-direction:column; align-items:center; justify-content:center; gap:12px; border-radius:10px; z-index:10; }
+#win-overlay.show{ display:flex; }
+.win-av{ width:72px; height:72px; border-radius:50%; border:3px solid #7FC23A; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:40px; background:#1a1a1a; box-shadow:0 0 24px rgba(127,194,58,.4); }
+.win-av img{ width:100%; height:100%; object-fit:cover; }
+#win-title{ font-size:26px; font-weight:700; color:#fff; }
+#win-sub{ font-size:13px; color:rgba(255,255,255,.5); }
+#again-btn{ margin-top:4px; padding:12px 36px; background:#3B6D11; border:none; color:#fff; font-size:15px; font-weight:600; border-radius:24px; cursor:pointer; }
+
+/* TOOLBAR */
+#toolbar{ display:flex; align-items:center; justify-content:center; gap:8px; padding:8px 16px 10px; }
+.tbtn{ display:flex; align-items:center; gap:5px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12); color:rgba(255,255,255,.6); font-size:12px; padding:7px 14px; border-radius:20px; cursor:pointer; transition:all .15s; }
+.tbtn.on{ background:rgba(59,109,17,.25); border-color:rgba(59,109,17,.5); color:#7FC23A; }
+.tbtn:active{ opacity:.7; }
+.tbtn.recording{ background:rgba(180,30,30,.3); border-color:rgba(220,60,60,.6); color:#ff6b6b; animation:recpulse .8s ease-in-out infinite; }
+@keyframes recpulse{ 0%,100%{opacity:1}50%{opacity:.5} }
+
+/* ── MODAL BASE ── */
+.modal-bg{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:100; align-items:flex-end; justify-content:center; }
+.modal-bg.show{ display:flex; }
+.sheet{ width:100%; max-width:500px; background:#2A2720; border-radius:20px 20px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px)); border-top:1px solid rgba(255,255,255,.12); }
+.handle{ width:36px; height:4px; background:rgba(255,255,255,.2); border-radius:2px; margin:0 auto 16px; }
+.sh-title{ font-size:16px; font-weight:600; color:rgba(255,255,255,.85); text-align:center; margin-bottom:14px; }
+.sheet input[type=text]{ width:100%; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); border-radius:10px; padding:12px 14px; font-size:15px; color:#fff; margin-bottom:12px; outline:none; }
+.sheet input[type=text]:focus{ border-color:rgba(59,109,17,.7); }
+.acts{ display:flex; gap:10px; }
+.btn-cancel{ flex:1; padding:13px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); color:rgba(255,255,255,.6); border-radius:12px; font-size:14px; cursor:pointer; }
+.btn-ok{ flex:2; padding:13px; background:#3B6D11; border:none; color:#fff; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; }
+.btn-ok:active{ opacity:.8; }
+
+/* ── PLAYER MODAL ── */
+.av-row{ display:flex; justify-content:center; margin-bottom:8px; }
+.m-av{ width:76px; height:76px; border-radius:50%; border:2px dashed rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-size:42px; cursor:pointer; overflow:hidden; }
+.m-av:active{ border-color:rgba(255,255,255,.5); }
+.m-av img{ width:100%; height:100%; object-fit:cover; }
+.av-hint{ font-size:11px; color:rgba(255,255,255,.3); text-align:center; margin-bottom:12px; }
+
+/* SFX MODAL */
+.sfx-player-tabs{ display:flex; gap:8px; margin-bottom:16px; }
+.sfx-tab{ flex:1; padding:8px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.06); color:rgba(255,255,255,.6); font-size:13px; cursor:pointer; text-align:center; }
+.sfx-tab.on{ background:rgba(59,109,17,.25); border-color:rgba(59,109,17,.5); color:#7FC23A; }
+.sfx-section{ margin-bottom:14px; }
+.sfx-label{ font-size:12px; color:rgba(255,255,255,.4); margin-bottom:8px; }
+.sfx-controls{ display:flex; gap:8px; align-items:center; }
+.sfx-rec-btn{ flex:1; padding:11px; border-radius:12px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.06); color:rgba(255,255,255,.7); font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
+.sfx-rec-btn.active{ background:rgba(180,30,30,.3); border-color:rgba(220,60,60,.6); color:#ff6b6b; animation:recpulse .8s ease-in-out infinite; }
+.sfx-play-btn{ width:42px; height:42px; border-radius:50%; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.08); color:rgba(255,255,255,.7); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.sfx-play-btn:disabled{ opacity:.3; cursor:default; }
+.sfx-status{ font-size:11px; color:rgba(255,255,255,.35); margin-top:6px; text-align:center; min-height:16px; }
+.sfx-divider{ height:1px; background:rgba(255,255,255,.08); margin:12px 0; }
+
+/* ── CROP MODAL ── */
+#crop-modal{ align-items:center; justify-content:center; }
+.crop-sheet{ background:#2A2720; border-radius:20px; padding:20px; width:calc(100% - 32px); max-width:400px; }
+.crop-title{ font-size:16px; font-weight:600; color:rgba(255,255,255,.85); text-align:center; margin-bottom:14px; }
+#crop-wrap{ position:relative; width:100%; aspect-ratio:1; background:#000; border-radius:12px; overflow:hidden; touch-action:none; cursor:grab; margin-bottom:14px; }
+#crop-wrap:active{ cursor:grabbing; }
+#crop-img{ position:absolute; transform-origin:0 0; user-select:none; -webkit-user-select:none; pointer-events:none; }
+.crop-overlay{ position:absolute; inset:0; pointer-events:none; }
+.crop-acts{ display:flex; gap:10px; }
+.zoom-row{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.zoom-row label{ font-size:12px; color:rgba(255,255,255,.4); flex-shrink:0; }
+.zoom-row input{ flex:1; accent-color:#3B6D11; }
+
+input[type=file]{ display:none; }
 </style>
 </head>
 <body>
@@ -175,12 +119,12 @@ input[type=file] { display: none; }
     <button id="new-btn" onclick="resetGame()">새 게임</button>
   </div>
   <div id="players">
-    <div class="pcard active" id="pc1" onclick="openModal(1)">
+    <div class="pcard active" id="pc1" onclick="openPlayerModal(1)">
       <div class="av p1bg" id="av1"><span id="em1">⚫</span><div class="av-ov">✏️</div></div>
       <div class="ptext"><div class="pname" id="nm1">플레이어 1</div><div class="pst" id="st1">차례입니다</div></div>
       <div class="dot"></div>
     </div>
-    <div class="pcard" id="pc2" onclick="openModal(2)">
+    <div class="pcard" id="pc2" onclick="openPlayerModal(2)">
       <div class="dot"></div>
       <div class="ptext"><div class="pname" id="nm2">플레이어 2</div><div class="pst" id="st2">대기 중</div></div>
       <div class="av p2bg" id="av2"><span id="em2">⚪</span><div class="av-ov">✏️</div></div>
@@ -196,62 +140,234 @@ input[type=file] { display: none; }
     </div>
   </div>
   <div id="toolbar">
-    <button class="tbtn on" id="sfx-btn" onclick="toggleSfx()">
-      <span>🔊</span><span id="sfx-lbl">효과음 켜짐</span>
-    </button>
+    <button class="tbtn on" id="sfx-btn" onclick="openSfxModal()">🎵 효과음 설정</button>
   </div>
 </div>
-<div id="modal">
+
+<!-- PLAYER MODAL -->
+<div class="modal-bg" id="player-modal">
   <div class="sheet">
     <div class="handle"></div>
-    <div class="sh-title" id="modal-title">플레이어 설정</div>
-    <div class="av-row"><div class="m-av" id="modal-av" onclick="triggerUpload()"></div></div>
-    <div class="av-hint">탭해서 캐릭터 이미지 변경</div>
-    <input type="text" id="modal-name" placeholder="이름 입력" maxlength="10">
+    <div class="sh-title" id="pm-title">플레이어 설정</div>
+    <div class="av-row"><div class="m-av" id="m-av" onclick="triggerImgUpload()"></div></div>
+    <div class="av-hint">탭해서 사진 선택 → 원형 크롭 조절</div>
+    <input type="text" id="pm-name" placeholder="이름 입력" maxlength="10">
     <div class="acts">
-      <button class="cancel" onclick="closeModal()">취소</button>
-      <button class="confirm" onclick="saveModal()">저장</button>
+      <button class="btn-cancel" onclick="closePlayerModal()">취소</button>
+      <button class="btn-ok" onclick="savePlayerModal()">저장</button>
     </div>
   </div>
 </div>
-<input type="file" id="file-input" accept="image/*" onchange="handleFile(event)">
+
+<!-- SFX MODAL -->
+<div class="modal-bg" id="sfx-modal">
+  <div class="sheet">
+    <div class="handle"></div>
+    <div class="sh-title">효과음 설정</div>
+    <div class="sfx-player-tabs">
+      <div class="sfx-tab on" id="sfx-tab1" onclick="selectSfxTab(1)">⚫ 플레이어 1</div>
+      <div class="sfx-tab" id="sfx-tab2" onclick="selectSfxTab(2)">⚪ 플레이어 2</div>
+    </div>
+    <div class="sfx-section">
+      <div class="sfx-label">착수 효과음</div>
+      <div class="sfx-controls">
+        <button class="sfx-rec-btn" id="sfx-rec-btn" onclick="toggleRecord()">🎙 녹음 시작</button>
+        <button class="sfx-play-btn" id="sfx-play-btn" onclick="previewSfx()" disabled>▶</button>
+      </div>
+      <div class="sfx-status" id="sfx-status">녹음 버튼을 눌러 효과음 녹음</div>
+    </div>
+    <div class="sfx-divider"></div>
+    <div class="sfx-section">
+      <div class="sfx-label">기본 효과음 사용</div>
+      <div class="sfx-controls">
+        <button class="sfx-rec-btn" id="sfx-default-btn" onclick="useDefaultSfx()" style="background:rgba(59,109,17,.15);border-color:rgba(59,109,17,.4);color:#7FC23A;">✓ 기본음으로 되돌리기</button>
+      </div>
+    </div>
+    <div class="acts" style="margin-top:4px;">
+      <button class="btn-cancel" onclick="closeSfxModal()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- CROP MODAL -->
+<div class="modal-bg" id="crop-modal">
+  <div class="crop-sheet">
+    <div class="crop-title">사진 조절</div>
+    <div id="crop-wrap">
+      <img id="crop-img" src="" draggable="false">
+      <canvas class="crop-overlay" id="crop-overlay"></canvas>
+    </div>
+    <div class="zoom-row">
+      <label>크기</label>
+      <input type="range" id="zoom-slider" min="0.5" max="3" step="0.01" value="1" oninput="onZoom(this.value)">
+    </div>
+    <div class="crop-acts">
+      <button class="btn-cancel" onclick="closeCrop()">취소</button>
+      <button class="btn-ok" onclick="confirmCrop()">적용</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="img-file" accept="image/*" onchange="onImgFile(event)">
+
 <script>
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
 const N=15;
 const board=Array.from({length:N},()=>new Array(N).fill(0));
 let cur=1,over=false;
 const imgs={1:null,2:null};
 const names={1:'플레이어 1',2:'플레이어 2'};
-let sfxOn=true,editingPlayer=0,pendingImg=null;
 let boardSize=0;
-let ac;
-function getAC(){if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();return ac;}
-function playStone(p){
-  if(!sfxOn)return;
-  try{const a=getAC();if(a.state==='suspended')a.resume();
-  const o=a.createOscillator(),g=a.createGain();
-  o.connect(g);g.connect(a.destination);o.type='sine';
-  const f=p===1?480:340;
-  o.frequency.setValueAtTime(f,a.currentTime);
-  o.frequency.exponentialRampToValueAtTime(f*.6,a.currentTime+.09);
-  g.gain.setValueAtTime(.22,a.currentTime);
-  g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.13);
-  o.start();o.stop(a.currentTime+.13);}catch(e){}
-}
-function playWin(){
-  if(!sfxOn)return;
-  try{const a=getAC();
-  [523,659,784,1047].forEach((f,i)=>{
+let editingPlayer=0, pendingCropSrc=null;
+
+// SFX state
+let sfxAC=null;
+const customSfx={1:null,2:null}; // AudioBuffer
+const useDefault={1:true,2:true};
+let mediaRecorder=null, recChunks=[], isRecording=false;
+let sfxTabPlayer=1;
+let previewBuf={1:null,2:null}; // temp buffer before saving
+
+// ═══════════════════════════════════════
+//  AUDIO
+// ═══════════════════════════════════════
+function getAC(){if(!sfxAC)sfxAC=new(window.AudioContext||window.webkitAudioContext)();return sfxAC;}
+
+function playDefault(p){
+  try{
+    const a=getAC();if(a.state==='suspended')a.resume();
     const o=a.createOscillator(),g=a.createGain();
-    o.connect(g);g.connect(a.destination);o.type='triangle';o.frequency.value=f;
-    const t=a.currentTime+i*.12;
-    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.18,t+.03);
-    g.gain.exponentialRampToValueAtTime(.001,t+.25);
-    o.start(t);o.stop(t+.25);});}catch(e){}
+    o.connect(g);g.connect(a.destination);o.type='sine';
+    const f=p===1?480:340;
+    o.frequency.setValueAtTime(f,a.currentTime);
+    o.frequency.exponentialRampToValueAtTime(f*.6,a.currentTime+.09);
+    g.gain.setValueAtTime(.22,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.13);
+    o.start();o.stop(a.currentTime+.13);
+  }catch(e){}
 }
+
+function playBuffer(buf){
+  try{
+    const a=getAC();if(a.state==='suspended')a.resume();
+    const src=a.createBufferSource();
+    src.buffer=buf;src.connect(a.destination);src.start();
+  }catch(e){}
+}
+
+function playSfx(p){
+  if(useDefault[p]||!customSfx[p])playDefault(p);
+  else playBuffer(customSfx[p]);
+}
+
+function playWin(){
+  try{
+    const a=getAC();
+    [523,659,784,1047].forEach((f,i)=>{
+      const o=a.createOscillator(),g=a.createGain();
+      o.connect(g);g.connect(a.destination);o.type='triangle';o.frequency.value=f;
+      const t=a.currentTime+i*.12;
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.18,t+.03);
+      g.gain.exponentialRampToValueAtTime(.001,t+.25);
+      o.start(t);o.stop(t+.25);
+    });
+  }catch(e){}
+}
+
+// ═══════════════════════════════════════
+//  SFX MODAL
+// ═══════════════════════════════════════
+function openSfxModal(){
+  sfxTabPlayer=1; refreshSfxTab();
+  document.getElementById('sfx-modal').classList.add('show');
+}
+function closeSfxModal(){ document.getElementById('sfx-modal').classList.remove('show'); stopRecordIfActive(); }
+
+function selectSfxTab(p){
+  sfxTabPlayer=p;
+  document.getElementById('sfx-tab1').classList.toggle('on',p===1);
+  document.getElementById('sfx-tab2').classList.toggle('on',p===2);
+  refreshSfxTab();
+}
+
+function refreshSfxTab(){
+  const p=sfxTabPlayer;
+  const hasCustom=!!customSfx[p];
+  document.getElementById('sfx-play-btn').disabled=!hasCustom;
+  document.getElementById('sfx-status').textContent=
+    useDefault[p]||!hasCustom ? '기본 효과음 사용 중' : '커스텀 효과음 사용 중 ✓';
+  if(isRecording){
+    document.getElementById('sfx-rec-btn').textContent='⏹ 녹음 중지';
+    document.getElementById('sfx-rec-btn').classList.add('active');
+  } else {
+    document.getElementById('sfx-rec-btn').textContent='🎙 녹음 시작';
+    document.getElementById('sfx-rec-btn').classList.remove('active');
+  }
+}
+
+async function toggleRecord(){
+  if(isRecording){ stopRecord(); return; }
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    const a=getAC(); if(a.state==='suspended') a.resume();
+    mediaRecorder=new MediaRecorder(stream);
+    recChunks=[];
+    mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) recChunks.push(e.data); };
+    mediaRecorder.onstop=async()=>{
+      const blob=new Blob(recChunks,{type:'audio/webm'});
+      const ab=await blob.arrayBuffer();
+      const a=getAC();
+      try{
+        const buf=await a.decodeAudioData(ab);
+        const p=sfxTabPlayer;
+        customSfx[p]=buf; useDefault[p]=false;
+        previewBuf[p]=buf;
+        document.getElementById('sfx-play-btn').disabled=false;
+        document.getElementById('sfx-status').textContent='녹음 완료! ▶ 버튼으로 미리 듣기';
+      }catch(e){
+        document.getElementById('sfx-status').textContent='녹음 처리 실패. 다시 시도해주세요.';
+      }
+      stream.getTracks().forEach(t=>t.stop());
+    };
+    mediaRecorder.start();
+    isRecording=true;
+    document.getElementById('sfx-rec-btn').textContent='⏹ 녹음 중지';
+    document.getElementById('sfx-rec-btn').classList.add('active');
+    document.getElementById('sfx-status').textContent='🔴 녹음 중...';
+  }catch(e){
+    document.getElementById('sfx-status').textContent='마이크 권한이 필요합니다.';
+  }
+}
+
+function stopRecord(){
+  if(mediaRecorder&&mediaRecorder.state!=='inactive') mediaRecorder.stop();
+  isRecording=false;
+  document.getElementById('sfx-rec-btn').textContent='🎙 녹음 시작';
+  document.getElementById('sfx-rec-btn').classList.remove('active');
+}
+function stopRecordIfActive(){ if(isRecording) stopRecord(); }
+
+function previewSfx(){
+  const p=sfxTabPlayer;
+  if(customSfx[p]) playBuffer(customSfx[p]);
+}
+
+function useDefaultSfx(){
+  const p=sfxTabPlayer;
+  useDefault[p]=true;
+  document.getElementById('sfx-status').textContent='기본 효과음으로 변경되었습니다.';
+}
+
+// ═══════════════════════════════════════
+//  CANVAS / BOARD
+// ═══════════════════════════════════════
 const cv=document.getElementById('board-canvas');
 const ctx=cv.getContext('2d');
 const wrap=document.getElementById('board-wrap');
 const winOv=document.getElementById('win-overlay');
+
 function layout(){
   const ww=wrap.clientWidth||window.innerWidth-24;
   const wh=wrap.clientHeight||(window.innerHeight-180);
@@ -259,75 +375,82 @@ function layout(){
   if(s===boardSize&&s>0)return;
   boardSize=s;
   const dpr=window.devicePixelRatio||1;
-  cv.style.width=s+'px';cv.style.height=s+'px';
-  cv.width=Math.round(s*dpr);cv.height=Math.round(s*dpr);
+  cv.style.width=s+'px'; cv.style.height=s+'px';
+  cv.width=Math.round(s*dpr); cv.height=Math.round(s*dpr);
   ctx.setTransform(dpr,0,0,dpr,0,0);
-  winOv.style.width=s+'px';winOv.style.height=s+'px';
+  winOv.style.width=s+'px'; winOv.style.height=s+'px';
   draw();
 }
+
 function draw(){
-  const s=boardSize;if(s<=0)return;
+  const s=boardSize; if(s<=0)return;
   const c=s/(N+1),o=c;
   ctx.clearRect(0,0,s,s);
-  ctx.fillStyle='#D4A843';ctx.fillRect(0,0,s,s);
-  ctx.strokeStyle='rgba(139,100,20,.09)';ctx.lineWidth=.6;
+  ctx.fillStyle='#D4A843'; ctx.fillRect(0,0,s,s);
+  ctx.strokeStyle='rgba(139,100,20,.09)'; ctx.lineWidth=.6;
   for(let i=0;i<16;i++){
     const y=(s/16)*i+Math.sin(i*1.3)*c*.25;
-    ctx.beginPath();ctx.moveTo(0,y);
-    ctx.bezierCurveTo(s*.3,y+c*.25,s*.7,y-c*.25,s,y);ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,y);
+    ctx.bezierCurveTo(s*.3,y+c*.25,s*.7,y-c*.25,s,y); ctx.stroke();
   }
-  ctx.strokeStyle='#8B6418';ctx.lineWidth=.9;
+  ctx.strokeStyle='#8B6418'; ctx.lineWidth=.9;
   for(let i=0;i<N;i++){
-    ctx.beginPath();ctx.moveTo(o+i*c,o);ctx.lineTo(o+i*c,o+(N-1)*c);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(o,o+i*c);ctx.lineTo(o+(N-1)*c,o+i*c);ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(o+i*c,o); ctx.lineTo(o+i*c,o+(N-1)*c); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(o,o+i*c); ctx.lineTo(o+(N-1)*c,o+i*c); ctx.stroke();
   }
   ctx.fillStyle='#5A3E0A';
   [3,7,11].forEach(r=>[3,7,11].forEach(cc=>{
-    ctx.beginPath();ctx.arc(o+cc*c,o+r*c,c*.09,0,Math.PI*2);ctx.fill();
+    ctx.beginPath(); ctx.arc(o+cc*c,o+r*c,c*.09,0,Math.PI*2); ctx.fill();
   }));
-  for(let r=0;r<N;r++)for(let cc=0;cc<N;cc++)if(board[r][cc])drawStone(r,cc,board[r][cc]);
+  for(let r=0;r<N;r++) for(let cc=0;cc<N;cc++) if(board[r][cc]) drawStone(r,cc,board[r][cc]);
 }
+
 function drawStone(row,col,player,hi){
   const s=boardSize,c=s/(N+1),o=c;
   const x=o+col*c,y=o+row*c,r=c*.44;
   if(imgs[player]){
-    ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.clip();
-    ctx.drawImage(imgs[player],x-r,y-r,r*2,r*2);ctx.restore();
-    ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.save(); ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.clip();
+    ctx.drawImage(imgs[player],x-r,y-r,r*2,r*2); ctx.restore();
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
     ctx.strokeStyle=player===1?'rgba(0,0,0,.35)':'rgba(180,180,180,.5)';
-    ctx.lineWidth=1.5;ctx.stroke();
-  }else{
+    ctx.lineWidth=1.5; ctx.stroke();
+  } else {
     const g=ctx.createRadialGradient(x-r*.28,y-r*.28,r*.05,x,y,r);
     if(player===1){g.addColorStop(0,'#666');g.addColorStop(.6,'#111');g.addColorStop(1,'#050505');}
     else{g.addColorStop(0,'#fff');g.addColorStop(.5,'#eee');g.addColorStop(1,'#bbb');}
-    ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
-    ctx.strokeStyle=player===1?'#222':'#999';ctx.lineWidth=.5;ctx.stroke();
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+    ctx.strokeStyle=player===1?'#222':'#999'; ctx.lineWidth=.5; ctx.stroke();
     const sh=ctx.createRadialGradient(x-r*.25,y-r*.3,0,x-r*.1,y-r*.15,r*.5);
     sh.addColorStop(0,player===1?'rgba(255,255,255,.2)':'rgba(255,255,255,.65)');
     sh.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=sh;ctx.fill();
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=sh; ctx.fill();
   }
   if(hi){ctx.beginPath();ctx.arc(x,y,r*.3,0,Math.PI*2);ctx.fillStyle='rgba(255,55,55,.9)';ctx.fill();}
 }
+
+// ═══════════════════════════════════════
+//  GAME
+// ═══════════════════════════════════════
 function getPos(cx,cy){
   const rect=cv.getBoundingClientRect();
   const s=boardSize,c=s/(N+1),o=c;
-  const px=(cx-rect.left)*(s/rect.width);
-  const py=(cy-rect.top)*(s/rect.height);
-  return{row:Math.round((py-o)/c),col:Math.round((px-o)/c)};
+  return{
+    row:Math.round(((cy-rect.top)*(s/rect.height)-o)/c),
+    col:Math.round(((cx-rect.left)*(s/rect.width)-o)/c)
+  };
 }
 function tap(e){
-  if(over||document.getElementById('modal').classList.contains('show'))return;
-  if(ac&&ac.state==='suspended')ac.resume();
+  if(over||document.querySelector('.modal-bg.show'))return;
+  if(sfxAC&&sfxAC.state==='suspended')sfxAC.resume();
   let cx,cy;
   if(e.touches){e.preventDefault();cx=e.touches[0].clientX;cy=e.touches[0].clientY;}
   else{cx=e.clientX;cy=e.clientY;}
   const{row,col}=getPos(cx,cy);
   if(row<0||row>=N||col<0||col>=N||board[row][col])return;
-  board[row][col]=cur;playStone(cur);draw();
+  board[row][col]=cur; playSfx(cur); draw();
   const win=check(row,col,cur);
   if(win){setTimeout(()=>{win.forEach(([r,c])=>drawStone(r,c,board[r][c],true));showWin();},80);return;}
-  cur=cur===1?2:1;updateUI();
+  cur=cur===1?2:1; updateUI();
 }
 function check(row,col,p){
   for(const[dr,dc]of[[0,1],[1,0],[1,1],[1,-1]]){
@@ -339,8 +462,8 @@ function check(row,col,p){
   return null;
 }
 function showWin(){
-  over=true;playWin();
-  const wa=document.getElementById('win-av');wa.innerHTML='';
+  over=true; playWin();
+  const wa=document.getElementById('win-av'); wa.innerHTML='';
   if(imgs[cur]){const i=document.createElement('img');i.src=imgs[cur].src;wa.appendChild(i);}
   else{const s=document.createElement('span');s.textContent=cur===1?'⚫':'⚪';s.style.fontSize='40px';wa.appendChild(s);}
   document.getElementById('win-title').textContent=names[cur]+' 승리! 🎉';
@@ -356,72 +479,189 @@ function updateUI(){
     document.getElementById('st'+p).textContent=(p===cur&&!over)?'차례입니다':'대기 중';
   });
 }
-function toggleSfx(){
-  sfxOn=!sfxOn;
-  document.getElementById('sfx-btn').classList.toggle('on',sfxOn);
-  document.getElementById('sfx-lbl').textContent=sfxOn?'효과음 켜짐':'효과음 꺼짐';
-}
-function openModal(p){
-  editingPlayer=p;pendingImg=null;
-  document.getElementById('modal-title').textContent='플레이어 '+p+' 설정';
-  document.getElementById('modal-name').value=names[p];
-  const av=document.getElementById('modal-av');av.innerHTML='';
+
+// ═══════════════════════════════════════
+//  PLAYER MODAL
+// ═══════════════════════════════════════
+function openPlayerModal(p){
+  editingPlayer=p; pendingCropSrc=null;
+  document.getElementById('pm-title').textContent='플레이어 '+p+' 설정';
+  document.getElementById('pm-name').value=names[p];
+  const av=document.getElementById('m-av'); av.innerHTML='';
   if(imgs[p]){const i=document.createElement('img');i.src=imgs[p].src;av.appendChild(i);}
   else{av.textContent=p===1?'⚫':'⚪';av.style.fontSize='42px';}
-  document.getElementById('modal').classList.add('show');
-  setTimeout(()=>document.getElementById('modal-name').focus(),200);
+  document.getElementById('player-modal').classList.add('show');
 }
-function closeModal(){document.getElementById('modal').classList.remove('show');pendingImg=null;}
-function saveModal(){
+function closePlayerModal(){ document.getElementById('player-modal').classList.remove('show'); }
+function savePlayerModal(){
   const p=editingPlayer;
-  const n=document.getElementById('modal-name').value.trim();
-  if(n){names[p]=n;document.getElementById('nm'+p).textContent=n;}
-  if(pendingImg){
+  const n=document.getElementById('pm-name').value.trim();
+  if(n){names[p]=n; document.getElementById('nm'+p).textContent=n;}
+  if(pendingCropSrc){
     const img=new Image();
-    img.onload=()=>{imgs[p]=img;updateAvUI(p);draw();};
-    img.src=pendingImg;
+    img.onload=()=>{ imgs[p]=img; updateAvUI(p); draw(); };
+    img.src=pendingCropSrc;
   }
-  closeModal();updateUI();
+  closePlayerModal(); updateUI();
 }
 function updateAvUI(p){
   const av=document.getElementById('av'+p);
   document.getElementById('em'+p).style.display='none';
-  const ex=av.querySelector('img.ci');if(ex)ex.remove();
-  const i=document.createElement('img');i.className='ci';i.src=imgs[p].src;
+  const ex=av.querySelector('img.ci'); if(ex)ex.remove();
+  const i=document.createElement('img'); i.className='ci'; i.src=imgs[p].src;
   av.insertBefore(i,av.querySelector('.av-ov'));
+  // update modal preview too
+  const mav=document.getElementById('m-av'); mav.innerHTML='';
+  const mi=document.createElement('img'); mi.src=imgs[p].src; mav.appendChild(mi);
 }
-function triggerUpload(){document.getElementById('file-input').click();}
-function handleFile(e){
-  const f=e.target.files[0];if(!f)return;
+function triggerImgUpload(){ document.getElementById('img-file').click(); }
+function onImgFile(e){
+  const f=e.target.files[0]; if(!f)return;
   const r=new FileReader();
-  r.onload=ev=>{
-    pendingImg=ev.target.result;
-    const av=document.getElementById('modal-av');av.innerHTML='';
-    const i=document.createElement('img');i.src=pendingImg;av.appendChild(i);
-  };
-  r.readAsDataURL(f);e.target.value='';
+  r.onload=ev=>{ openCrop(ev.target.result); };
+  r.readAsDataURL(f); e.target.value='';
 }
-document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
-document.getElementById('modal-name').addEventListener('keydown',e=>{if(e.key==='Enter'){e.target.blur();saveModal();}});
+
+// ═══════════════════════════════════════
+//  CROP MODAL
+// ═══════════════════════════════════════
+let cropState={ x:0, y:0, scale:1, imgW:0, imgH:0, wrapSize:0 };
+let dragStart=null, pinchStartDist=0, pinchStartScale=1;
+
+function openCrop(src){
+  document.getElementById('player-modal').classList.remove('show');
+  const img=document.getElementById('crop-img');
+  img.onload=()=>{
+    const wrap=document.getElementById('crop-wrap');
+    const ws=wrap.clientWidth||300;
+    cropState.imgW=img.naturalWidth;
+    cropState.imgH=img.naturalHeight;
+    cropState.wrapSize=ws;
+    // Initial scale: fit the shorter side to wrap
+    const initScale=ws/Math.min(img.naturalWidth,img.naturalHeight);
+    cropState.scale=initScale;
+    document.getElementById('zoom-slider').min=initScale*0.5;
+    document.getElementById('zoom-slider').max=initScale*4;
+    document.getElementById('zoom-slider').step=initScale*0.01;
+    document.getElementById('zoom-slider').value=initScale;
+    // Center
+    cropState.x=(ws-img.naturalWidth*initScale)/2;
+    cropState.y=(ws-img.naturalHeight*initScale)/2;
+    applyCrop();
+    drawCropOverlay();
+  };
+  img.src=src;
+  document.getElementById('crop-modal').classList.add('show');
+}
+function closeCrop(){
+  document.getElementById('crop-modal').classList.remove('show');
+  document.getElementById('player-modal').classList.add('show');
+}
+function confirmCrop(){
+  // Render cropped circle to canvas
+  const ws=cropState.wrapSize;
+  const offscreen=document.createElement('canvas');
+  offscreen.width=300; offscreen.height=300;
+  const oc=offscreen.getContext('2d');
+  const ratio=300/ws;
+  oc.save();
+  oc.beginPath(); oc.arc(150,150,150,0,Math.PI*2); oc.clip();
+  oc.drawImage(
+    document.getElementById('crop-img'),
+    cropState.x*ratio, cropState.y*ratio,
+    cropState.imgW*cropState.scale*ratio,
+    cropState.imgH*cropState.scale*ratio
+  );
+  oc.restore();
+  pendingCropSrc=offscreen.toDataURL('image/png');
+  // Update modal preview
+  const mav=document.getElementById('m-av'); mav.innerHTML='';
+  const mi=document.createElement('img'); mi.src=pendingCropSrc; mav.appendChild(mi);
+  document.getElementById('crop-modal').classList.remove('show');
+  document.getElementById('player-modal').classList.add('show');
+}
+function applyCrop(){
+  const img=document.getElementById('crop-img');
+  img.style.transform=`translate(${cropState.x}px,${cropState.y}px) scale(${cropState.scale})`;
+  img.style.width=cropState.imgW+'px';
+  img.style.height=cropState.imgH+'px';
+}
+function drawCropOverlay(){
+  const ov=document.getElementById('crop-overlay');
+  const ws=cropState.wrapSize;
+  ov.width=ws; ov.height=ws;
+  const c=ov.getContext('2d');
+  c.clearRect(0,0,ws,ws);
+  c.fillStyle='rgba(0,0,0,.55)';
+  c.fillRect(0,0,ws,ws);
+  c.globalCompositeOperation='destination-out';
+  c.beginPath(); c.arc(ws/2,ws/2,ws/2-2,0,Math.PI*2); c.fill();
+  c.globalCompositeOperation='source-over';
+  c.strokeStyle='rgba(255,255,255,.6)'; c.lineWidth=2;
+  c.beginPath(); c.arc(ws/2,ws/2,ws/2-2,0,Math.PI*2); c.stroke();
+}
+function onZoom(v){
+  const s=parseFloat(v);
+  const ws=cropState.wrapSize;
+  // Zoom toward center
+  const cx=ws/2, cy=ws/2;
+  const oldS=cropState.scale;
+  cropState.x=cx-(cx-cropState.x)*(s/oldS);
+  cropState.y=cy-(cy-cropState.y)*(s/oldS);
+  cropState.scale=s;
+  applyCrop();
+}
+
+// Touch/drag on crop
+const cw=document.getElementById('crop-wrap');
+cw.addEventListener('touchstart',e=>{
+  if(e.touches.length===1){
+    dragStart={x:e.touches[0].clientX-cropState.x, y:e.touches[0].clientY-cropState.y};
+  } else if(e.touches.length===2){
+    pinchStartDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    pinchStartScale=cropState.scale;
+    dragStart=null;
+  }
+},{passive:true});
+cw.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(e.touches.length===1&&dragStart){
+    cropState.x=e.touches[0].clientX-dragStart.x;
+    cropState.y=e.touches[0].clientY-dragStart.y;
+    applyCrop();
+  } else if(e.touches.length===2){
+    const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    const newScale=pinchStartScale*(dist/pinchStartDist);
+    const sl=document.getElementById('zoom-slider');
+    const clamped=Math.min(Math.max(newScale,parseFloat(sl.min)),parseFloat(sl.max));
+    onZoom(clamped);
+    sl.value=clamped;
+  }
+},{passive:false});
+cw.addEventListener('touchend',()=>{ dragStart=null; },{passive:true});
+// Mouse drag
+cw.addEventListener('mousedown',e=>{ dragStart={x:e.clientX-cropState.x, y:e.clientY-cropState.y}; });
+cw.addEventListener('mousemove',e=>{ if(!dragStart)return; cropState.x=e.clientX-dragStart.x; cropState.y=e.clientY-dragStart.y; applyCrop(); });
+cw.addEventListener('mouseup',()=>{ dragStart=null; });
+
+// Modal backdrops
+document.getElementById('player-modal').addEventListener('click',function(e){if(e.target===this)closePlayerModal();});
+document.getElementById('sfx-modal').addEventListener('click',function(e){if(e.target===this)closeSfxModal();});
+document.getElementById('pm-name').addEventListener('keydown',e=>{if(e.key==='Enter'){e.target.blur();savePlayerModal();}});
+
 cv.addEventListener('click',tap);
 cv.addEventListener('touchstart',tap,{passive:false});
 window.addEventListener('resize',()=>{boardSize=0;layout();});
 window.addEventListener('orientationchange',()=>{boardSize=0;setTimeout(layout,150);});
+
 function tryLayout(){
   layout();
-  if(boardSize<=0){
-    setTimeout(layout,100);
-    setTimeout(layout,300);
-    setTimeout(layout,700);
-  }
+  if(boardSize<=0){setTimeout(layout,100);setTimeout(layout,300);setTimeout(layout,700);}
 }
-if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',tryLayout);
-}else{tryLayout();}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',tryLayout);
+else tryLayout();
 updateUI();
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
-}
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
 </html>
