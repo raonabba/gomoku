@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="오목">
+<meta name="theme-color" content="#1C1A17">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<title>오목 — 2인용</title>
+<style>
+:root {
+  --wood-dark: #A07020;
+  --accent: #3B6D11;
+  --r: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body {
+  width: 100%; height: 100%;
+  background: #1C1A17;
+  overflow: hidden;
+  font-family: -apple-system, 'Helvetica Neue', sans-serif;
+}
+#app {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  padding: env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px) 0;
+}
+#header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px 8px;
+}
+.logo { font-size: 20px; font-weight: 700; color: #E8B84B; letter-spacing: -0.5px; }
+.logo span { color: rgba(255,255,255,.35); font-weight: 400; font-size: 12px; margin-left: 6px; }
+#new-btn {
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+  color: rgba(255,255,255,.8); font-size: 13px; padding: 7px 16px;
+  border-radius: 20px; cursor: pointer;
+}
+#new-btn:active { background: rgba(255,255,255,.18); }
+#players { display: flex; gap: 8px; padding: 0 12px 8px; }
+.pcard {
+  flex: 1; display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--r); padding: 8px 12px;
+  cursor: pointer; position: relative; overflow: hidden;
+  transition: background .2s, border-color .2s; min-height: 52px;
+}
+.pcard.active { background: rgba(59,109,17,.2); border-color: rgba(59,109,17,.6); }
+.pcard.active::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0;
+  height: 2px; background: linear-gradient(90deg,#3B6D11,#7FC23A);
+}
+.pcard:nth-child(2) { flex-direction: row-reverse; }
+.pcard:nth-child(2) .ptext { text-align: right; }
+.av {
+  width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+  border: 2px solid rgba(255,255,255,.15); position: relative;
+}
+.pcard.active .av { border-color: rgba(59,109,17,.8); }
+.av.p1bg { background: #111; } .av.p2bg { background: #eee; }
+.av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.av-ov {
+  position: absolute; inset: 0; background: rgba(0,0,0,.5);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; border-radius: 50%; font-size: 13px;
+}
+.pcard:active .av-ov { opacity: 1; }
+.ptext { flex: 1; min-width: 0; }
+.pname { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pst { font-size: 11px; color: rgba(255,255,255,.35); margin-top: 1px; }
+.pcard.active .pst { color: #7FC23A; font-weight: 500; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: #7FC23A; display: none; flex-shrink: 0; animation: pulse 1.2s ease-in-out infinite; }
+.pcard.active .dot { display: block; }
+@keyframes pulse { 0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.5} }
+#board-wrap {
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 12px; overflow: hidden; min-height: 0; position: relative;
+}
+#board-canvas {
+  display: block; border-radius: 10px;
+  box-shadow: 0 0 0 3px var(--wood-dark), 0 8px 40px rgba(0,0,0,.6);
+  touch-action: none; cursor: pointer;
+}
+#win-overlay {
+  display: none; position: absolute;
+  background: rgba(0,0,0,.72);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  border-radius: 10px; z-index: 10;
+}
+#win-overlay.show { display: flex; }
+.win-av {
+  width: 72px; height: 72px; border-radius: 50%;
+  border: 3px solid #7FC23A; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px; background: #1a1a1a;
+  box-shadow: 0 0 24px rgba(127,194,58,.4);
+}
+.win-av img { width: 100%; height: 100%; object-fit: cover; }
+#win-title { font-size: 26px; font-weight: 700; color: #fff; }
+#win-sub { font-size: 13px; color: rgba(255,255,255,.5); }
+#again-btn {
+  margin-top: 4px; padding: 12px 36px; background: #3B6D11;
+  border: none; color: #fff; font-size: 15px; font-weight: 600;
+  border-radius: 24px; cursor: pointer;
+}
+#again-btn:active { opacity: .8; }
+#toolbar {
+  display: flex; align-items: center; justify-content: center;
+  padding: 8px 16px 10px;
+}
+.tbtn {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,255,255,.6); font-size: 12px; padding: 8px 18px;
+  border-radius: 20px; cursor: pointer;
+}
+.tbtn.on { background: rgba(59,109,17,.25); border-color: rgba(59,109,17,.5); color: #7FC23A; }
+.tbtn:active { opacity: .7; }
+#modal {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  z-index: 100; align-items: flex-end; justify-content: center;
+}
+#modal.show { display: flex; }
+.sheet {
+  width: 100%; max-width: 480px; background: #2A2720;
+  border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + env(safe-area-inset-bottom,0px));
+  border-top: 1px solid rgba(255,255,255,.12);
+}
+.handle { width: 36px; height: 4px; background: rgba(255,255,255,.2); border-radius: 2px; margin: 0 auto 16px; }
+.sh-title { font-size: 16px; font-weight: 600; color: rgba(255,255,255,.85); text-align: center; margin-bottom: 14px; }
+.av-row { display: flex; justify-content: center; margin-bottom: 8px; }
+.m-av {
+  width: 76px; height: 76px; border-radius: 50%;
+  border: 2px dashed rgba(255,255,255,.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 42px; cursor: pointer; overflow: hidden;
+}
+.m-av:active { border-color: rgba(255,255,255,.5); }
+.m-av img { width: 100%; height: 100%; object-fit: cover; }
+.av-hint { font-size: 11px; color: rgba(255,255,255,.3); text-align: center; margin-bottom: 12px; }
+.sheet input[type=text] {
+  width: 100%; background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15); border-radius: 10px;
+  padding: 12px 14px; font-size: 15px; color: #fff; margin-bottom: 12px; outline: none;
+}
+.sheet input[type=text]:focus { border-color: rgba(59,109,17,.7); }
+.acts { display: flex; gap: 10px; }
+.cancel {
+  flex: 1; padding: 13px; background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.6);
+  border-radius: 12px; font-size: 14px; cursor: pointer;
+}
+.confirm {
+  flex: 2; padding: 13px; background: #3B6D11; border: none;
+  color: #fff; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.confirm:active { opacity: .8; }
+input[type=file] { display: none; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div class="logo">오목 <span>2인용</span></div>
+    <button id="new-btn" onclick="resetGame()">새 게임</button>
+  </div>
+  <div id="players">
+    <div class="pcard active" id="pc1" onclick="openModal(1)">
+      <div class="av p1bg" id="av1"><span id="em1">⚫</span><div class="av-ov">✏️</div></div>
+      <div class="ptext"><div class="pname" id="nm1">플레이어 1</div><div class="pst" id="st1">차례입니다</div></div>
+      <div class="dot"></div>
+    </div>
+    <div class="pcard" id="pc2" onclick="openModal(2)">
+      <div class="dot"></div>
+      <div class="ptext"><div class="pname" id="nm2">플레이어 2</div><div class="pst" id="st2">대기 중</div></div>
+      <div class="av p2bg" id="av2"><span id="em2">⚪</span><div class="av-ov">✏️</div></div>
+    </div>
+  </div>
+  <div id="board-wrap">
+    <canvas id="board-canvas"></canvas>
+    <div id="win-overlay">
+      <div class="win-av" id="win-av"></div>
+      <div id="win-title"></div>
+      <div id="win-sub">5개 연속 완성!</div>
+      <button id="again-btn" onclick="resetGame()">다시 하기</button>
+    </div>
+  </div>
+  <div id="toolbar">
+    <button class="tbtn on" id="sfx-btn" onclick="toggleSfx()">
+      <span>🔊</span><span id="sfx-lbl">효과음 켜짐</span>
+    </button>
+  </div>
+</div>
+<div id="modal">
+  <div class="sheet">
+    <div class="handle"></div>
+    <div class="sh-title" id="modal-title">플레이어 설정</div>
+    <div class="av-row"><div class="m-av" id="modal-av" onclick="triggerUpload()"></div></div>
+    <div class="av-hint">탭해서 캐릭터 이미지 변경</div>
+    <input type="text" id="modal-name" placeholder="이름 입력" maxlength="10">
+    <div class="acts">
+      <button class="cancel" onclick="closeModal()">취소</button>
+      <button class="confirm" onclick="saveModal()">저장</button>
+    </div>
+  </div>
+</div>
+<input type="file" id="file-input" accept="image/*" onchange="handleFile(event)">
+<script>
+const N=15;
+const board=Array.from({length:N},()=>new Array(N).fill(0));
+let cur=1,over=false;
+const imgs={1:null,2:null};
+const names={1:'플레이어 1',2:'플레이어 2'};
+let sfxOn=true,editingPlayer=0,pendingImg=null;
+let boardSize=0;
+let ac;
+function getAC(){if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();return ac;}
+function playStone(p){
+  if(!sfxOn)return;
+  try{const a=getAC();if(a.state==='suspended')a.resume();
+  const o=a.createOscillator(),g=a.createGain();
+  o.connect(g);g.connect(a.destination);o.type='sine';
+  const f=p===1?480:340;
+  o.frequency.setValueAtTime(f,a.currentTime);
+  o.frequency.exponentialRampToValueAtTime(f*.6,a.currentTime+.09);
+  g.gain.setValueAtTime(.22,a.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.13);
+  o.start();o.stop(a.currentTime+.13);}catch(e){}
+}
+function playWin(){
+  if(!sfxOn)return;
+  try{const a=getAC();
+  [523,659,784,1047].forEach((f,i)=>{
+    const o=a.createOscillator(),g=a.createGain();
+    o.connect(g);g.connect(a.destination);o.type='triangle';o.frequency.value=f;
+    const t=a.currentTime+i*.12;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.18,t+.03);
+    g.gain.exponentialRampToValueAtTime(.001,t+.25);
+    o.start(t);o.stop(t+.25);});}catch(e){}
+}
+const cv=document.getElementById('board-canvas');
+const ctx=cv.getContext('2d');
+const wrap=document.getElementById('board-wrap');
+const winOv=document.getElementById('win-overlay');
+function layout(){
+  const ww=wrap.clientWidth||window.innerWidth-24;
+  const wh=wrap.clientHeight||(window.innerHeight-180);
+  const s=Math.floor(Math.min(ww-24,wh-16,800));
+  if(s===boardSize&&s>0)return;
+  boardSize=s;
+  const dpr=window.devicePixelRatio||1;
+  cv.style.width=s+'px';cv.style.height=s+'px';
+  cv.width=Math.round(s*dpr);cv.height=Math.round(s*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  winOv.style.width=s+'px';winOv.style.height=s+'px';
+  draw();
+}
+function draw(){
+  const s=boardSize;if(s<=0)return;
+  const c=s/(N+1),o=c;
+  ctx.clearRect(0,0,s,s);
+  ctx.fillStyle='#D4A843';ctx.fillRect(0,0,s,s);
+  ctx.strokeStyle='rgba(139,100,20,.09)';ctx.lineWidth=.6;
+  for(let i=0;i<16;i++){
+    const y=(s/16)*i+Math.sin(i*1.3)*c*.25;
+    ctx.beginPath();ctx.moveTo(0,y);
+    ctx.bezierCurveTo(s*.3,y+c*.25,s*.7,y-c*.25,s,y);ctx.stroke();
+  }
+  ctx.strokeStyle='#8B6418';ctx.lineWidth=.9;
+  for(let i=0;i<N;i++){
+    ctx.beginPath();ctx.moveTo(o+i*c,o);ctx.lineTo(o+i*c,o+(N-1)*c);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(o,o+i*c);ctx.lineTo(o+(N-1)*c,o+i*c);ctx.stroke();
+  }
+  ctx.fillStyle='#5A3E0A';
+  [3,7,11].forEach(r=>[3,7,11].forEach(cc=>{
+    ctx.beginPath();ctx.arc(o+cc*c,o+r*c,c*.09,0,Math.PI*2);ctx.fill();
+  }));
+  for(let r=0;r<N;r++)for(let cc=0;cc<N;cc++)if(board[r][cc])drawStone(r,cc,board[r][cc]);
+}
+function drawStone(row,col,player,hi){
+  const s=boardSize,c=s/(N+1),o=c;
+  const x=o+col*c,y=o+row*c,r=c*.44;
+  if(imgs[player]){
+    ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.clip();
+    ctx.drawImage(imgs[player],x-r,y-r,r*2,r*2);ctx.restore();
+    ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.strokeStyle=player===1?'rgba(0,0,0,.35)':'rgba(180,180,180,.5)';
+    ctx.lineWidth=1.5;ctx.stroke();
+  }else{
+    const g=ctx.createRadialGradient(x-r*.28,y-r*.28,r*.05,x,y,r);
+    if(player===1){g.addColorStop(0,'#666');g.addColorStop(.6,'#111');g.addColorStop(1,'#050505');}
+    else{g.addColorStop(0,'#fff');g.addColorStop(.5,'#eee');g.addColorStop(1,'#bbb');}
+    ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+    ctx.strokeStyle=player===1?'#222':'#999';ctx.lineWidth=.5;ctx.stroke();
+    const sh=ctx.createRadialGradient(x-r*.25,y-r*.3,0,x-r*.1,y-r*.15,r*.5);
+    sh.addColorStop(0,player===1?'rgba(255,255,255,.2)':'rgba(255,255,255,.65)');
+    sh.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=sh;ctx.fill();
+  }
+  if(hi){ctx.beginPath();ctx.arc(x,y,r*.3,0,Math.PI*2);ctx.fillStyle='rgba(255,55,55,.9)';ctx.fill();}
+}
+function getPos(cx,cy){
+  const rect=cv.getBoundingClientRect();
+  const s=boardSize,c=s/(N+1),o=c;
+  const px=(cx-rect.left)*(s/rect.width);
+  const py=(cy-rect.top)*(s/rect.height);
+  return{row:Math.round((py-o)/c),col:Math.round((px-o)/c)};
+}
+function tap(e){
+  if(over||document.getElementById('modal').classList.contains('show'))return;
+  if(ac&&ac.state==='suspended')ac.resume();
+  let cx,cy;
+  if(e.touches){e.preventDefault();cx=e.touches[0].clientX;cy=e.touches[0].clientY;}
+  else{cx=e.clientX;cy=e.clientY;}
+  const{row,col}=getPos(cx,cy);
+  if(row<0||row>=N||col<0||col>=N||board[row][col])return;
+  board[row][col]=cur;playStone(cur);draw();
+  const win=check(row,col,cur);
+  if(win){setTimeout(()=>{win.forEach(([r,c])=>drawStone(r,c,board[r][c],true));showWin();},80);return;}
+  cur=cur===1?2:1;updateUI();
+}
+function check(row,col,p){
+  for(const[dr,dc]of[[0,1],[1,0],[1,1],[1,-1]]){
+    const line=[[row,col]];
+    for(let d=1;d<5;d++){const r=row+dr*d,c=col+dc*d;if(r<0||r>=N||c<0||c>=N||board[r][c]!==p)break;line.push([r,c]);}
+    for(let d=1;d<5;d++){const r=row-dr*d,c=col-dc*d;if(r<0||r>=N||c<0||c>=N||board[r][c]!==p)break;line.push([r,c]);}
+    if(line.length>=5)return line;
+  }
+  return null;
+}
+function showWin(){
+  over=true;playWin();
+  const wa=document.getElementById('win-av');wa.innerHTML='';
+  if(imgs[cur]){const i=document.createElement('img');i.src=imgs[cur].src;wa.appendChild(i);}
+  else{const s=document.createElement('span');s.textContent=cur===1?'⚫':'⚪';s.style.fontSize='40px';wa.appendChild(s);}
+  document.getElementById('win-title').textContent=names[cur]+' 승리! 🎉';
+  winOv.classList.add('show');
+}
+function resetGame(){
+  for(let r=0;r<N;r++)board[r].fill(0);
+  cur=1;over=false;winOv.classList.remove('show');draw();updateUI();
+}
+function updateUI(){
+  [1,2].forEach(p=>{
+    document.getElementById('pc'+p).classList.toggle('active',p===cur&&!over);
+    document.getElementById('st'+p).textContent=(p===cur&&!over)?'차례입니다':'대기 중';
+  });
+}
+function toggleSfx(){
+  sfxOn=!sfxOn;
+  document.getElementById('sfx-btn').classList.toggle('on',sfxOn);
+  document.getElementById('sfx-lbl').textContent=sfxOn?'효과음 켜짐':'효과음 꺼짐';
+}
+function openModal(p){
+  editingPlayer=p;pendingImg=null;
+  document.getElementById('modal-title').textContent='플레이어 '+p+' 설정';
+  document.getElementById('modal-name').value=names[p];
+  const av=document.getElementById('modal-av');av.innerHTML='';
+  if(imgs[p]){const i=document.createElement('img');i.src=imgs[p].src;av.appendChild(i);}
+  else{av.textContent=p===1?'⚫':'⚪';av.style.fontSize='42px';}
+  document.getElementById('modal').classList.add('show');
+  setTimeout(()=>document.getElementById('modal-name').focus(),200);
+}
+function closeModal(){document.getElementById('modal').classList.remove('show');pendingImg=null;}
+function saveModal(){
+  const p=editingPlayer;
+  const n=document.getElementById('modal-name').value.trim();
+  if(n){names[p]=n;document.getElementById('nm'+p).textContent=n;}
+  if(pendingImg){
+    const img=new Image();
+    img.onload=()=>{imgs[p]=img;updateAvUI(p);draw();};
+    img.src=pendingImg;
+  }
+  closeModal();updateUI();
+}
+function updateAvUI(p){
+  const av=document.getElementById('av'+p);
+  document.getElementById('em'+p).style.display='none';
+  const ex=av.querySelector('img.ci');if(ex)ex.remove();
+  const i=document.createElement('img');i.className='ci';i.src=imgs[p].src;
+  av.insertBefore(i,av.querySelector('.av-ov'));
+}
+function triggerUpload(){document.getElementById('file-input').click();}
+function handleFile(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    pendingImg=ev.target.result;
+    const av=document.getElementById('modal-av');av.innerHTML='';
+    const i=document.createElement('img');i.src=pendingImg;av.appendChild(i);
+  };
+  r.readAsDataURL(f);e.target.value='';
+}
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.getElementById('modal-name').addEventListener('keydown',e=>{if(e.key==='Enter'){e.target.blur();saveModal();}});
+cv.addEventListener('click',tap);
+cv.addEventListener('touchstart',tap,{passive:false});
+window.addEventListener('resize',()=>{boardSize=0;layout();});
+window.addEventListener('orientationchange',()=>{boardSize=0;setTimeout(layout,150);});
+function tryLayout(){
+  layout();
+  if(boardSize<=0){
+    setTimeout(layout,100);
+    setTimeout(layout,300);
+    setTimeout(layout,700);
+  }
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',tryLayout);
+}else{tryLayout();}
+updateUI();
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
